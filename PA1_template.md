@@ -10,13 +10,25 @@ output:
 
 ### 1. Load the data
 
-```{r, echo = TRUE}
+
+```r
     unzip("activity.zip")
     activity <- read.csv("activity.csv")
 ```
 
-```{r, echo = TRUE}
+
+```r
     head(activity)
+```
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
 ```
 
 ### 2. Process the data
@@ -30,11 +42,13 @@ Notes:
 by the formula: interval + 2.5
 (the time point that falls in the middle of the measurement interval)
 
-```{r, echo = TRUE, message = FALSE}
+
+```r
     library(lubridate)
 ```
 
-```{r, echo = TRUE}
+
+```r
     date <- ymd(activity$date)
     
     days <- as.numeric(date)
@@ -54,18 +68,31 @@ by the formula: interval + 2.5
     activity$weekday <- as.integer(format(activity$POSIXct, "%u"))
 ```
 
-```{r, echo = TRUE}
+
+```r
     head(activity)
+```
+
+```
+##   steps       date             POSIXct     time weekday
+## 1    NA 01/10/2012 2012-10-01 00:02:30 00:02:30       1
+## 2    NA 01/10/2012 2012-10-01 00:07:30 00:07:30       1
+## 3    NA 01/10/2012 2012-10-01 00:12:30 00:12:30       1
+## 4    NA 01/10/2012 2012-10-01 00:17:30 00:17:30       1
+## 5    NA 01/10/2012 2012-10-01 00:22:30 00:22:30       1
+## 6    NA 01/10/2012 2012-10-01 00:27:30 00:27:30       1
 ```
 
 
 ## What is mean total number of steps taken per day?
 
-```{r, echo = TRUE, message = FALSE}
+
+```r
     library(dplyr)
 ```
 
-```{r, echo = TRUE}
+
+```r
     day_total <- activity %>%
         group_by(date) %>%
         summarise(steps = sum(steps))
@@ -73,17 +100,26 @@ by the formula: interval + 2.5
 
 ### 1. Histogram of the total number of steps taken each day
 
-```{r, echo = TRUE}
+
+```r
     hist(
         day_total$steps, breaks = 10,
         main = "Histogram of the total number of steps",
         xlab = "Total steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 ### 2. Mean and median total number of steps taken per day
 
-```{r, echo = TRUE}
+
+```r
     summary(day_total$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##      41    8841   10765   10766   13294   21194       8
 ```
 
 Conclusions:
@@ -99,13 +135,15 @@ Conclusions:
 
 ### 1. Average number of steps taken, averaged across all days.
 
-```{r, echo = TRUE}
+
+```r
     daily <- activity %>%
         group_by(time) %>%
         summarise(pattern = mean(steps, na.rm = TRUE))
 ```
 
-```{r, echo = TRUE}
+
+```r
     hour <- as.numeric(hms(daily$time)) / 3600
 
     plot(
@@ -117,14 +155,27 @@ Conclusions:
         main = "Average number of steps taken, averaged across all days")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
 ### 2. Maximum number of steps.
 
-```{r, echo = TRUE}
+
+```r
     summary(daily$pattern)
 ```
 
-```{r, echo = TRUE}
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   2.486  34.113  37.383  52.835 206.170
+```
+
+
+```r
    print(daily$time[daily$pattern == max(daily$pattern)])
+```
+
+```
+## [1] "08:37:30"
 ```
 
 Conclusions:
@@ -139,12 +190,17 @@ Conclusions:
 
 ### 1. Missing values
 
-```{r, echo = TRUE}
+
+```r
     missing <- sum(is.na(activity$steps))
     total <- length(activity$steps)
     ratio <- missing / total
     
     sprintf("The number of missing values: %i (%.1f %%)", missing, ratio * 100)
+```
+
+```
+## [1] "The number of missing values: 2304 (13.1 %)"
 ```
 
 ### 2. Devise a strategy for filling in all of the missing values in the datase
@@ -154,7 +210,8 @@ The idea of imputing is following:
 * find average number of steps according to time and day of week
   and impute this value
 
-```{r, echo = TRUE}
+
+```r
     impute <- activity %>%
         group_by(time, weekday) %>%
         summarise(
@@ -164,15 +221,21 @@ The idea of imputing is following:
 
 Check that there are no missing values
 
-```{r, echo = TRUE}
+
+```r
     print(sum(is.na(impute$steps)))
+```
+
+```
+## [1] 0
 ```
 
 So, this strategy is suitable
 
 ### 3. Imputing missing values
 
-```{r, echo = TRUE}
+
+```r
      activity <- activity %>%
         group_by(time, weekday) %>%
         mutate(
@@ -184,14 +247,33 @@ So, this strategy is suitable
 
 Check that there are no missing values
 
-```{r, echo = TRUE}
+
+```r
     missing <- sum(is.na(activity$steps))
 
     sprintf("The number of missing values: %i", missing)
 ```
 
-```{r, echo = TRUE}
+```
+## [1] "The number of missing values: 0"
+```
+
+
+```r
     head(activity)
+```
+
+```
+## # A tibble: 6 x 5
+## # Groups:   time, weekday [6]
+##   steps date       POSIXct             time     weekday
+##   <dbl> <chr>      <dttm>              <chr>      <int>
+## 1  1.43 01/10/2012 2012-10-01 00:02:30 00:02:30       1
+## 2  0    01/10/2012 2012-10-01 00:07:30 00:07:30       1
+## 3  0    01/10/2012 2012-10-01 00:12:30 00:12:30       1
+## 4  0    01/10/2012 2012-10-01 00:17:30 00:17:30       1
+## 5  0    01/10/2012 2012-10-01 00:22:30 00:22:30       1
+## 6  5    01/10/2012 2012-10-01 00:27:30 00:27:30       1
 ```
 
 ### 4. Impact of imputing missing data on the estimates
@@ -199,13 +281,15 @@ Check that there are no missing values
 
 #### Histogram of the total number of steps taken each day
 
-```{r, echo = TRUE}
+
+```r
     day_total <- activity %>%
         group_by(date) %>%
         summarise(steps = sum(steps))
 ```
 
-```{r, echo = TRUE}
+
+```r
     hist(
         day_total$steps,
         breaks = 10,
@@ -213,10 +297,18 @@ Check that there are no missing values
         xlab = "Total steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
 #### Mean and median total number of steps taken per day
 
-```{r, echo = TRUE}
+
+```r
     summary(day_total$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    8918   11015   10821   12811   21194
 ```
 
 Conclusions:
@@ -237,7 +329,8 @@ Conclusions:
     with two levels – “weekday”and “weekend” indicating whether
     a given date is a weekday or weekend.
 
-```{r, echo = TRUE}
+
+```r
     activity$weekend <- cut(
         activity$weekday,
         breaks = c(1, 6, 8),
@@ -253,11 +346,13 @@ Conclusions:
 
 ### 2. Average number of steps taken, averaged across all weekdays and weekends.
 
-```{r, echo = TRUE, message = FALSE}
+
+```r
     library(lattice)
 ```
 
-```{r, echo = TRUE}
+
+```r
     hour <- as.numeric(hms(daily$time)) / 3600
     xyplot(
         daily$pattern ~ hour | daily$weekend,
@@ -266,6 +361,8 @@ Conclusions:
         ylab = "steps",
         main = "Average number of steps across all weekdays and weekends")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 Conclusions:
 
